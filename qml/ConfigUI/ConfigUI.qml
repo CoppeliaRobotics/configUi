@@ -56,6 +56,7 @@ PluginWindow {
 
     function setSchema(s) {
         schema = s
+        selectedTab = tabs()[0] || "Main"
     }
 
     function setConfigAndSchema(o) {
@@ -103,7 +104,7 @@ PluginWindow {
         return s
     }
 
-    property string selectedTab: (tabs()[0])
+    property string selectedTab: "Main"
 
     ColumnLayout {
         id: topLayout
