@@ -14,6 +14,15 @@ PluginWindow {
     title: qsTr("ConfigUI")
     color: systemPalette.window
 
+    property bool readjustPosition: true
+    Timer {
+        running: true
+        interval: 1000
+        onTriggered: readjustPosition = false
+    }
+    onWidthChanged: if(readjustPosition) x = Screen.width - width - 5
+    onHeightChanged: if(readjustPosition) y = (Screen.height - height) / 2
+
     SystemPalette {
         id: systemPalette
         colorGroup: SystemPalette.Active
