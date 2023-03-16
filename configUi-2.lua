@@ -155,6 +155,12 @@ function ConfigUI_uiChanged(c)
     end
 end
 
+function ConfigUI_uiClosing(info)
+    if ConfigUI.instance then
+        ConfigUI.instance:uiClosing(info)
+    end
+end
+
 function ConfigUI:uiChanged(c)
     for elemName,elemSchema in pairs(self.schema) do
         local v=c[elemName]
@@ -174,6 +180,13 @@ function ConfigUI:uiChanged(c)
     self:generate()
 end
 
+function ConfigUI:uiClosing(info)
+    if self.uiHandle then
+        simQML.destroyEngine(self.uiHandle)
+        self.uiHandle=nil
+    end
+end
+
 function ConfigUI:sysCall_init()
     self:readSchema()
     self:validateSchema()
@@ -188,6 +201,7 @@ end
 function ConfigUI:sysCall_cleanup()
     if self.uiHandle then
         simQML.destroyEngine(self.uiHandle)
+        self.uiHandle=nil
     end
 end
 

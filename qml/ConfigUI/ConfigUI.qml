@@ -19,6 +19,8 @@ PluginWindow {
         colorGroup: SystemPalette.Active
     }
 
+    onClosing: simBridge.sendEvent('ConfigUI_uiClosing',{})
+
     property var config: ({})
     property var schema: ({})
     property var schemaSorted: {
