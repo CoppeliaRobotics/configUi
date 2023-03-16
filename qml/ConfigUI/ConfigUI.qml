@@ -22,7 +22,6 @@ PluginWindow {
     property var config: ({})
     property var schema: ({})
     property var schemaSorted: {
-        console.log('recomputing schemaSorted...')
         var ss = []
         for(var elemName in schema) {
             var elemSchema = schema[elemName]
@@ -34,7 +33,6 @@ PluginWindow {
             ss.push([tab, group, col, order, elemName, elemSchema])
         }
         ss.sort()
-        console.log('recomputing schemaSorted done')
         return ss
     }
 
@@ -199,7 +197,6 @@ PluginWindow {
                                                         target: loader.item
                                                         function onElemValueChanged() {
                                                             mainWindow.config[loader.item.elemName] = loader.item.elemValue
-                                                            console.log(`UI changed. New config: ${JSON.stringify(mainWindow.config, null, 4)}`)
                                                             simBridge.sendEvent('ConfigUI_uiChanged',mainWindow.config)
                                                         }
                                                     }
