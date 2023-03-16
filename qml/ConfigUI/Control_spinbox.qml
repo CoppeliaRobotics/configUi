@@ -7,14 +7,35 @@ SpinBox {
     required property var elemSchema
     property real elemValue
 
-    readonly property int decimals: elemSchema.decimals || 0
+    readonly property int decimals: {
+        if(elemSchema.type === 'int')
+            return 0
+        if(elemSchema.decimals !== undefined)
+            return elemSchema.decimals
+        else
+            return 3
+    }
     readonly property int k: Math.pow(10, Math.max(0, Math.round(decimals)))
     readonly property real realValue: value / k
 
-    from: k * (elemSchema.minimum || 0)
-    value: k * elemValue
-    to: k * (elemSchema.maximum || 1)
-    stepSize: elemSchema.step ? Math.max(1, Math.round(elemSchema.step * k)) : 1
+    from: {
+        if(elemSchema.minimum !== undefined)
+            return k * elemSchema.minimum
+        else
+            return -2147483648
+    }
+    to: {
+        if(elemSchema.maximum !== undefined)
+            return k * elemSchema.maximum
+        else
+            return 2147483647
+    }
+    stepSize: {
+        if(elemSchema.step !== undefined)
+            return Math.max(1, Math.round(elemSchema.step * k))
+        else
+            return 1
+    }
 
     validator: DoubleValidator {
         bottom: Math.min(root.from, root.to)
@@ -29,5 +50,6 @@ SpinBox {
         return Number.fromLocaleString(locale, text) * root.k
     }
 
+    Component.onCompleted: value = k * elemValue
     onRealValueChanged: elemValue = realValue
 }
