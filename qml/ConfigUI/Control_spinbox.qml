@@ -7,6 +7,8 @@ SpinBox {
     required property var elemSchema
     property real elemValue
 
+    editable: true
+
     readonly property int decimals: {
         if(elemSchema.type === 'int')
             return 0
