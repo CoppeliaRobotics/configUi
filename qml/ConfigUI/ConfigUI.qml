@@ -65,8 +65,17 @@ PluginWindow {
 
     function tabs() {
         var s = new Set()
-        for(var o of schemaSorted)
-            s.add(o[0])
+        var ss = []
+        for(var elemName in schema) {
+            var elemSchema = schema[elemName]
+            var ui = elemSchema.ui || {}
+            var tab = ui.tab || "Main"
+            var order = ui.order || 0
+            ss.push([order, tab])
+        }
+        ss.sort()
+        for(var o of ss)
+            s.add(o[1])
         return Array.from(s)
     }
 
