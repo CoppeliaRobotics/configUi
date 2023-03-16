@@ -6,17 +6,21 @@ ColumnLayout {
     id: root
     required property string elemName
     required property var elemSchema
-    property int elemValue
+    property var elemValue
+    spacing: 0
 
     Repeater {
         model: elemSchema.choices
 
         RadioButton {
             required property int index
-            required property string modelData
-            text: modelData
-            checked: root.elemValue === index
-            onCheckedChanged: if(checked) root.elemValue = index
+            required property var modelData
+            text: elemSchema.labels[index] || modelData
+            checked: root.elemValue === modelData
+            onCheckedChanged: {
+                if(checked && root.elemValue !== modelData)
+                    root.elemValue = modelData
+            }
         }
     }
 }
