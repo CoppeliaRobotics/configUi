@@ -103,7 +103,7 @@ PluginWindow {
         return s
     }
 
-    property string selectedTab: "Main"
+    property string selectedTab: (tabs()[0])
 
     ColumnLayout {
         id: topLayout
