@@ -52,6 +52,10 @@ SpinBox {
         return Number.fromLocaleString(locale, text) * root.k
     }
 
-    Component.onCompleted: value = k * elemValue
-    onRealValueChanged: elemValue = realValue
+    value: k * elemValue
+
+    onRealValueChanged: {
+        if(elemValue !== realValue)
+            elemValue = realValue
+    }
 }
