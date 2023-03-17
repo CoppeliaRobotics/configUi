@@ -55,7 +55,7 @@ The valid fields of an element schema are:
 - `maximum`: the maximum value (optional, only for types int and float);
 - `step`: the step value (optional, only for types int and float);
 - `choices`: the option values for types radio and combo;
-- `labels`: labels to use in place fo the choices above;
+- `labels`: labels to use in place of the choices above;
 - `ui`: a table of parameters for the UI:
     - `order`: an int to provide an ordering of fields;
     - `group`: an int to provide a visual grouping of fields;
