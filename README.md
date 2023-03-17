@@ -56,6 +56,7 @@ The valid fields of an element schema are:
 - `step`: the step value (optional, only for types int and float);
 - `choices`: the option values for types radio and combo;
 - `labels`: labels to use in place of the choices above;
+- `callback`: only for callback type, the name of a lua function to call with the name of the clicked button as argument;
 - `ui`: a table of parameters for the UI:
     - `order`: an int to provide an ordering of fields;
     - `group`: an int to provide a visual grouping of fields;

@@ -3,9 +3,10 @@ import QtQuick.Controls 2.15
 
 Button {
     id: root
+    required property ConfigUI configUi
     required property string elemName
     required property var elemSchema
     property string elemValue
     text: elemValue
-    onPressed: console.log('Button not implemented')
+    onPressed: configUi.simBridge.sendEvent(elemSchema.callback, elemName)
 }

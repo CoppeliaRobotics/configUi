@@ -236,6 +236,7 @@ PluginWindow {
 
                                                         Component.onCompleted: {
                                                             loader.setSource(`Control_${elemSchema.ui.control || 'dummy'}.qml`, {
+                                                                configUi: mainWindow,
                                                                 elemName: elemLayout.elemName,
                                                                 elemSchema: elemLayout.elemSchema,
                                                                 elemValue: config[elemName],
