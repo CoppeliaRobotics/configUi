@@ -58,4 +58,27 @@ SpinBox {
         if(elemValue !== realValue)
             elemValue = realValue
     }
+
+    MouseArea {
+        anchors.fill: parent
+        anchors.leftMargin: parent.width - parent.height * 0.75
+        acceptedButtons: Qt.RightButton
+        property real initialY
+        property int initialValue
+        onPressed: {
+            initialY = mouseY
+            initialValue = root.value
+        }
+        property real speed: 0.2
+        onPositionChanged: {
+            var newVal = initialValue + speed * (initialY - mouseY)
+            var newValClamp = Math.max(root.from, Math.min(root.to, newVal))
+            if(newVal > root.to)
+                initialY -= (newVal - newValClamp) / speed
+            if(newVal < root.from)
+                initialY += (newVal - newValClamp) / speed
+            initialValue = newValClamp - speed * (initialY - mouseY)
+            root.value = newValClamp
+        }
+    }
 }
