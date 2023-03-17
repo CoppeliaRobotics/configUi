@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>ConfigUI_test.qml</file>
+        <file alias="ConfigUI.qml">../qml/ConfigUI/ConfigUI.qml</file>
+        <file alias="ConfigUIWindow.qml">../qml/ConfigUI/ConfigUIWindow.qml</file>
+        <file alias="Control_combo.qml">../qml/ConfigUI/Control_combo.qml</file>
+        <file alias="Control_dummy.qml">../qml/ConfigUI/Control_dummy.qml</file>
+        <file alias="Control_spinbox.qml">../qml/ConfigUI/Control_spinbox.qml</file>
+        <file alias="Control_edit.qml">../qml/ConfigUI/Control_edit.qml</file>
+        <file alias="Control_slider.qml">../qml/ConfigUI/Control_slider.qml</file>
+        <file alias="Control_radio.qml">../qml/ConfigUI/Control_radio.qml</file>
+        <file alias="Control_checkbox.qml">../qml/ConfigUI/Control_checkbox.qml</file>
+        <file alias="Control_color.qml">../qml/ConfigUI/Control_color.qml</file>
+        <file alias="Control_button.qml">../qml/ConfigUI/Control_button.qml</file>
+    </qresource>
+</RCC>
