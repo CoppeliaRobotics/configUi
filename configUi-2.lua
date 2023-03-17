@@ -12,6 +12,10 @@ function ConfigUI:validateElemSchema(elemName,elemSchema)
 
     elemSchema.ui=elemSchema.ui or {}
 
+    if elemSchema.choices and #elemSchema.choices==0 then
+        error('field "choices" cannot be empty')
+    end
+
     -- auto-guess type if missing:
     if not elemSchema.type then
         if elemSchema.choices then
