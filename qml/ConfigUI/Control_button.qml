@@ -8,5 +8,5 @@ Button {
     required property var elemSchema
     property string elemValue
     text: elemValue
-    onPressed: configUi.simBridge.sendEvent(elemSchema.callback, elemName)
+    onPressed: configUi.sendEvent(elemSchema.callback, elemName)
 }

@@ -1,34 +1,17 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.12
-import QtQuick.Window 2.15
-import QtQml 2.15
-import CoppeliaSimPlugin 1.0
 
-PluginWindow {
-    id: mainWindow
-    width: topLayout.implicitWidth
-    height: topLayout.implicitHeight
-    visible: true
-    title: qsTr("ConfigUI")
+Rectangle {
+    id: root
+    implicitWidth: topLayout.implicitWidth
+    implicitHeight: topLayout.implicitHeight
     color: systemPalette.window
-    resizable: false
-
-    property bool readjustPosition: true
-    Timer {
-        running: true
-        interval: 1000
-        onTriggered: readjustPosition = false
-    }
-    onWidthChanged: if(readjustPosition) x = Screen.width - width - 5
-    onHeightChanged: if(readjustPosition) y = (Screen.height - height) / 2
 
     SystemPalette {
         id: systemPalette
         colorGroup: SystemPalette.Active
     }
-
-    onClosing: simBridge.sendEvent('ConfigUI_uiClosing',{})
 
     property var config: ({})
     property var schema: ({})
@@ -118,7 +101,7 @@ PluginWindow {
                 model: tabs()
                 TabButton {
                     text: modelData
-                    onClicked: mainWindow.selectedTab = modelData
+                    onClicked: root.selectedTab = modelData
                     width: implicitWidth
                 }
             }
@@ -146,7 +129,7 @@ PluginWindow {
                         model: groups(tab)
 
                         Rectangle {
-                            visible: mainWindow.selectedTab === groupsRepeater.tab
+                            visible: root.selectedTab === groupsRepeater.tab
                             required property var modelData
                             Layout.margins: 0
                             Layout.fillWidth: true
@@ -217,26 +200,26 @@ PluginWindow {
                                                             id: uiChangedConnection
                                                             target: loader.item
                                                             function onElemValueChanged() {
-                                                                mainWindow.config[loader.item.elemName] = loader.item.elemValue
-                                                                simBridge.sendEvent('ConfigUI_uiChanged',mainWindow.config)
+                                                                root.config[loader.item.elemName] = loader.item.elemValue
+                                                                simBridge.sendEvent('ConfigUI_uiChanged',root.config)
                                                             }
                                                         }
 
                                                         Connections {
                                                             id: updateConfigConnection
-                                                            target: mainWindow
+                                                            target: root
                                                             function onUpdateConfig(c) {
                                                                 uiChangedConnection.enabled = false
                                                                 var v = c[loader.item.elemName]
                                                                 loader.item.elemValue = v
-                                                                mainWindow.config[loader.item.elemName] = v
+                                                                root.config[loader.item.elemName] = v
                                                                 uiChangedConnection.enabled = true
                                                             }
                                                         }
 
                                                         Component.onCompleted: {
                                                             loader.setSource(`Control_${elemSchema.ui.control || 'dummy'}.qml`, {
-                                                                configUi: mainWindow,
+                                                                configUi: root,
                                                                 elemName: elemLayout.elemName,
                                                                 elemSchema: elemLayout.elemSchema,
                                                                 elemValue: config[elemName],
@@ -255,4 +238,13 @@ PluginWindow {
             }
         }
     }
+
+    // interface for controls:
+
+    function sendEvent(n, o) {
+        if(simBridge)
+            simBridge.sendEvent(n, o)
+    }
+
+    property var simBridge
 }

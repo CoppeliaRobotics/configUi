@@ -147,7 +147,7 @@ function ConfigUI:createUi()
     if self.uiHandle then return end
     self.uiHandle=simQML.createEngine()
     simQML.setEventHandler(self.uiHandle,'dispatchEventsToFunctions')
-    local qmlFile=sim.getStringParam(sim.stringparam_resourcesdir)..'/qml/ConfigUI/ConfigUI.qml'
+    local qmlFile=sim.getStringParam(sim.stringparam_resourcesdir)..'/qml/ConfigUI/ConfigUIWindow.qml'
     simQML.load(self.uiHandle,qmlFile)
     simQML.sendEvent(self.uiHandle,'setConfigAndSchema',{config=self.config,schema=self.schema})
 end
