@@ -111,7 +111,7 @@ PluginWindow {
 
         TabBar {
             id: tabBar
-            width: mainWindow.width
+            Layout.fillWidth: true
             visible: tabButtonsRepeater.model.length > 1
             Repeater {
                 id: tabButtonsRepeater
