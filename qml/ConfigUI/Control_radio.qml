@@ -15,7 +15,8 @@ ColumnLayout {
         RadioButton {
             required property int index
             required property var modelData
-            text: elemSchema.labels[index] || modelData
+            text: (elemSchema.labels ? elemSchema.labels[index] : modelData) || modelData
+
             checked: root.elemValue === modelData
             onCheckedChanged: {
                 if(checked && root.elemValue !== modelData)
