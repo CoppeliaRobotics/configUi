@@ -38,7 +38,7 @@ function ConfigUI:validateElemSchema(elemName,elemSchema)
         elseif elemSchema.type=='bool' then
             elemSchema.default=false
         elseif elemSchema.choices then
-            elemSchema.default=0
+            elemSchema.default=elemSchema.choices[1]
         elseif elemSchema.type=='callback' then
             elemSchema.default=''
         end
