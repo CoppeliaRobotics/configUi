@@ -47,6 +47,10 @@ function ConfigUI:validateElemSchema(elemName,elemSchema)
     if elemSchema.default==nil then
         error('missing "default" for key "'..elemName..'"')
     end
+    
+    if elemSchema.choices and not table.find(elemSchema.choices,elemSchema.default) then
+        error('the given default for key "'..elemName..'" is not contained in "choices"')
+    end
 
     -- auto-guess control if missing:
     if not elemSchema.ui.control then
