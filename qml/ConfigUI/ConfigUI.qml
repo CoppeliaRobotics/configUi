@@ -12,6 +12,7 @@ PluginWindow {
     visible: true
     title: qsTr("ConfigUI")
     color: systemPalette.window
+    resizable: false
 
     property bool readjustPosition: true
     Timer {
