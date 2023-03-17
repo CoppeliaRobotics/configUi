@@ -142,7 +142,6 @@ Rectangle {
                                 id: paddingItem
                                 implicitWidth: colsLayout.implicitWidth + 10
                                 implicitHeight: colsLayout.implicitHeight + 10
-                                Layout.fillWidth: true
 
                                 RowLayout {
                                     id: colsLayout
