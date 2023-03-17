@@ -10,7 +10,6 @@ PluginWindow {
     width: topLayout.implicitWidth
     height: topLayout.implicitHeight
     visible: true
-    flags: Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.MSWindowsFixedSizeDialogHint
     title: qsTr("ConfigUI")
     color: systemPalette.window
 
