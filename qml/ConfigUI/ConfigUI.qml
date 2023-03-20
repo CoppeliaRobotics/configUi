@@ -113,100 +113,83 @@ Rectangle {
 
             ColumnLayout {
                 id: groupsLayout
-                spacing: 5
+                spacing: 15
                 anchors.centerIn: parent
 
                 Repeater {
-                    id: tabsRepeater
-                    model: tabs()
+                    id: groupsRepeater
+                    model: groups(root.selectedTab)
 
-                    Repeater {
-                        id: groupsRepeater
-                        required property string modelData
-                        readonly property string tab: modelData
-                        model: groups(tab)
+                    RowLayout {
+                        id: colsLayout
+                        spacing: 5
 
-                        Frame {
-                            visible: root.selectedTab === groupsRepeater.tab
-                            required property var modelData
-                            Layout.fillWidth: true
-                            padding: 5
-                            background: Rectangle {
-                                color: Qt.rgba(0, 0, 0, 0.04)
-                                radius: 10
-                            }
+                        Repeater {
+                            id: colsRepeater
+                            readonly property string tab: root.selectedTab
+                            readonly property int group: modelData
+                            model: cols(tab, group)
 
-                            RowLayout {
-                                id: colsLayout
+                            ColumnLayout {
+                                id: elemsLayout
                                 spacing: 5
+                                required property var modelData
 
                                 Repeater {
-                                    id: colsRepeater
-                                    readonly property string tab: groupsRepeater.tab
-                                    readonly property int group: modelData
-                                    model: cols(tab, group)
+                                    id: elemsRepeater
+                                    readonly property string tab: colsRepeater.tab
+                                    readonly property int group: colsRepeater.group
+                                    readonly property int col: modelData
+                                    model: elems(tab, group, col)
 
                                     ColumnLayout {
-                                        id: elemsLayout
-                                        spacing: 5
+                                        id: elemLayout
                                         required property var modelData
+                                        readonly property string tab: elemsRepeater.tab || 'Main'
+                                        readonly property int group: elemsRepeater.group || 0
+                                        readonly property int col: elemsRepeater.col || 0
+                                        readonly property var elemSchema: modelData[1]
+                                        readonly property string elemName: elemSchema.key || modelData[0]
+                                        readonly property int order: elemSchema.ui.order || 0
 
-                                        Repeater {
-                                            id: elemsRepeater
-                                            readonly property string tab: colsRepeater.tab
-                                            readonly property int group: colsRepeater.group
-                                            readonly property int col: modelData
-                                            model: elems(tab, group, col)
+                                        Label {
+                                            Layout.fillWidth: true
+                                            visible: elemSchema.ui.control !== 'checkbox'
+                                            text: `${elemSchema.name || elemName}:`
+                                        }
 
-                                            ColumnLayout {
-                                                id: elemLayout
-                                                required property var modelData
-                                                readonly property string tab: elemsRepeater.tab || 'Main'
-                                                readonly property int group: elemsRepeater.group || 0
-                                                readonly property int col: elemsRepeater.col || 0
-                                                readonly property var elemSchema: modelData[1]
-                                                readonly property string elemName: elemSchema.key || modelData[0]
-                                                readonly property int order: elemSchema.ui.order || 0
+                                        Loader {
+                                            id: loader
+                                        }
 
-                                                Label {
-                                                    visible: elemSchema.ui.control !== 'checkbox'
-                                                    text: `${elemSchema.name || elemName}:`
-                                                }
-
-                                                Loader {
-                                                    id: loader
-                                                }
-
-                                                Connections {
-                                                    id: uiChangedConnection
-                                                    target: loader.item
-                                                    function onElemValueChanged() {
-                                                        root.config[loader.item.elemName] = loader.item.elemValue
-                                                        simBridge.sendEvent('ConfigUI_uiChanged',root.config)
-                                                    }
-                                                }
-
-                                                Connections {
-                                                    id: updateConfigConnection
-                                                    target: root
-                                                    function onUpdateConfig(c) {
-                                                        uiChangedConnection.enabled = false
-                                                        var v = c[loader.item.elemName]
-                                                        loader.item.elemValue = v
-                                                        root.config[loader.item.elemName] = v
-                                                        uiChangedConnection.enabled = true
-                                                    }
-                                                }
-
-                                                Component.onCompleted: {
-                                                    loader.setSource(`Control_${elemSchema.ui.control || 'dummy'}.qml`, {
-                                                        configUi: root,
-                                                        elemName: elemLayout.elemName,
-                                                        elemSchema: elemLayout.elemSchema,
-                                                        elemValue: config[elemName],
-                                                    })
-                                                }
+                                        Connections {
+                                            id: uiChangedConnection
+                                            target: loader.item
+                                            function onElemValueChanged() {
+                                                root.config[loader.item.elemName] = loader.item.elemValue
+                                                simBridge.sendEvent('ConfigUI_uiChanged',root.config)
                                             }
+                                        }
+
+                                        Connections {
+                                            id: updateConfigConnection
+                                            target: root
+                                            function onUpdateConfig(c) {
+                                                uiChangedConnection.enabled = false
+                                                var v = c[loader.item.elemName]
+                                                loader.item.elemValue = v
+                                                root.config[loader.item.elemName] = v
+                                                uiChangedConnection.enabled = true
+                                            }
+                                        }
+
+                                        Component.onCompleted: {
+                                            loader.setSource(`Control_${elemSchema.ui.control || 'dummy'}.qml`, {
+                                                configUi: root,
+                                                elemName: elemLayout.elemName,
+                                                elemSchema: elemLayout.elemSchema,
+                                                elemValue: config[elemName],
+                                            })
                                         }
                                     }
                                 }
