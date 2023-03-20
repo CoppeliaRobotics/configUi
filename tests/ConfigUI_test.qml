@@ -100,7 +100,7 @@ Window {
             button1: 'foo',
             checkbox1: true,
             string1: 'bar',
-            radio1: 1,
+            radio1: 'y',
         }
     })
 }
