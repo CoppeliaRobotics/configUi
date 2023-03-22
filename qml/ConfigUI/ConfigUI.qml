@@ -154,7 +154,7 @@ Rectangle {
 
                                         Label {
                                             Layout.fillWidth: true
-                                            visible: elemSchema.ui.control !== 'checkbox'
+                                            visible: elemSchema.ui.control !== 'checkbox' && elemSchema.ui.control !== 'button'
                                             text: `${elemSchema.name || elemName}:`
                                         }
 
