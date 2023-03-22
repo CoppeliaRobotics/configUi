@@ -7,6 +7,6 @@ Button {
     required property string elemName
     required property var elemSchema
     property string elemValue
-    text: elemValue
+    text: elemValue || elemName
     onPressed: configUi.sendEvent(elemSchema.callback, elemName)
 }
