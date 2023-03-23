@@ -48,4 +48,8 @@ PluginWindow {
     function setConfigAndSchema(o) {
         configUi.setConfigAndSchema(o)
     }
+
+    function beforeSimulation() {
+        close()
+    }
 }

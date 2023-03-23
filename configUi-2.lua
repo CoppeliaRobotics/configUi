@@ -247,7 +247,8 @@ function ConfigUI:sysCall_nonSimulation()
 end
 
 function ConfigUI:sysCall_beforeSimulation()
-    self:closeUi()
+    if not self.uiHandle then return end
+    simQML.sendEvent(self.uiHandle,'beforeSimulation',self.config)
 end
 
 function ConfigUI:sysCall_sensing()
@@ -255,6 +256,8 @@ function ConfigUI:sysCall_sensing()
 end
 
 function ConfigUI:sysCall_afterSimulation()
+    if not self.uiHandle then return end
+    simQML.sendEvent(self.uiHandle,'afterSimulation',self.config)
 end
 
 function ConfigUI:setGenerateCallback(f)
