@@ -47,7 +47,7 @@ function ConfigUI:validateElemSchema(elemName,elemSchema)
     if elemSchema.default==nil then
         error('missing "default" for key "'..elemName..'"')
     end
-    
+
     if elemSchema.choices and not table.find(elemSchema.choices,elemSchema.default) then
         error('the given default for key "'..elemName..'" is not contained in "choices"')
     end
@@ -179,7 +179,7 @@ function ConfigUI:uiChanged(c)
             self.config[elemName]=v
         end
     end
-    
+
     -- write to oldConfig too, otherwise it will detect a change to .config later
     -- which will trigger another generate()
     self.oldConfig=sim.unpackTable(sim.packTable(self.config))
@@ -275,6 +275,12 @@ function ConfigUI:__index(k)
 end
 
 setmetatable(ConfigUI,{__call=function(meta,modelType,schema,genCb)
+    if not simQML then
+        error('plugin simQML is required')
+    end
+    if table.compare(simQML.qtVersion(),{5,15})<0 then
+        error('Qt version 5.15 or greater is required (have '..table.join(simQML.qtVersion(),'.')..')')
+    end
     if ConfigUI.instance then
         error('multiple instances of ConfigUI not supported')
     end
