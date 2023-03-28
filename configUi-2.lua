@@ -149,7 +149,11 @@ function ConfigUI:createUi()
     simQML.setEventHandler(self.uiHandle,'dispatchEventsToFunctions')
     local qmlFile=sim.getStringParam(sim.stringparam_resourcesdir)..'/qml/ConfigUI/ConfigUIWindow.qml'
     simQML.load(self.uiHandle,qmlFile)
-    simQML.sendEvent(self.uiHandle,'setConfigAndSchema',{config=self.config,schema=self.schema})
+    simQML.sendEvent(self.uiHandle,'setConfigAndSchema',{
+        config=self.config,
+        schema=self.schema,
+        objectName=sim.getObjectAlias(sim.getObject'.',1),
+    })
 end
 
 function ConfigUI:configChanged()

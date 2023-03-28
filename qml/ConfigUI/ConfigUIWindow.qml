@@ -47,6 +47,8 @@ PluginWindow {
 
     function setConfigAndSchema(o) {
         configUi.setConfigAndSchema(o)
+        if(o.objectName !== undefined)
+            mainWindow.title = `${o.objectName} config`
     }
 
     function beforeSimulation() {
