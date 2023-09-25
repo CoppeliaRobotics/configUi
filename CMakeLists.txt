@@ -8,10 +8,6 @@ if(NOT COPPELIASIM_INCLUDE_DIR)
         set(COPPELIASIM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include)
     endif()
 endif()
-set(CMAKE_MODULE_PATH
-    ${CMAKE_MODULE_PATH}
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
-    ${COPPELIASIM_INCLUDE_DIR}/cmake)
 find_package(CoppeliaSim 4.5.1.7 REQUIRED)
 
 coppeliasim_add_lua("configUi-2.lua")
