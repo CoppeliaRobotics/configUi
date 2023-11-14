@@ -279,9 +279,8 @@ function ConfigUI:__index(k)
 end
 
 setmetatable(ConfigUI,{__call=function(meta,modelType,schema,genCb)
-    if not simQML then
-        error('plugin simQML is required')
-    end
+    sim=require'sim'
+    simQML=require'simQML'
     if table.compare(simQML.qtVersion(),{5,15})<0 then
         error('Qt version 5.15 or greater is required (have '..table.join(simQML.qtVersion(),'.')..')')
     end
