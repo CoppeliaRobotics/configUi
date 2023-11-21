@@ -156,11 +156,6 @@ function ConfigUI:createUi()
     })
 end
 
-function ConfigUI:configChanged()
-    if not self.uiHandle then return end
-    simQML.sendEvent(self.uiHandle, 'setConfig', self.config)
-end
-
 function ConfigUI_uiChanged(c)
     if ConfigUI.instance then
         ConfigUI.instance:uiChanged(c)
@@ -184,12 +179,7 @@ function ConfigUI:uiChanged(c)
         end
     end
 
-    -- write to oldConfig too, otherwise it will detect a change to .config later
-    -- which will trigger another generate()
-    self.oldConfig = sim.unpackTable(sim.packTable(self.config))
-
     self:writeConfig()
-    self:generate()
 end
 
 function ConfigUI:uiClosing(info)
@@ -205,9 +195,8 @@ function ConfigUI:sysCall_init()
     self:readInfo()
     self.info.modelType = self.modelType
     self:writeInfo()
-    self:readConfig()
+    self:readConfig() -- reads existing or creates default
     self:writeConfig()
-    self:generate()
 end
 
 function ConfigUI:sysCall_cleanup()
@@ -223,30 +212,20 @@ function ConfigUI:sysCall_userConfig()
     end
 end
 
+function ConfigUI:sysCall_data(changedNames)
+    if changedNames[self.dataBlockName.config] then
+        self:readConfig()
+        if self.uiHandle then
+            simQML.sendEvent(self.uiHandle, 'setConfig', self.config)
+        end
+        self:generateNow()
+    end
+end
+
 function ConfigUI:sysCall_nonSimulation()
     if self.generatePending then --and (self.generatePending + self.generationTime)<sim.getSystemTime() then
         self.generatePending = false
-        self.generateCallback(self.config)
-        -- sim.announceSceneContentChange() leave this out for now
-    end
-
-    -- poll for external config change:
-    local newConfigPack = sim.packTable(self.config)
-    if self.oldConfig and newConfigPack ~= sim.packTable(self.oldConfig) then
-        self.oldConfig = sim.unpackTable(newConfigPack)
-        self:configChanged() -- updates ui
-        self:writeConfig()
-        self:generate()
-    else
-        self.oldConfig = sim.unpackTable(newConfigPack)
-        local newConfig = sim.readCustomTableData(sim.getObject '.', self.dataBlockName.config)
-        if sim.packTable(newConfig) ~= sim.packTable(self.config) then
-            self:readConfig()
-            self:configChanged() -- updates ui
-            self:writeConfig()
-            self:generate()
-            self.oldConfig = sim.unpackTable(sim.packTable(self.config))
-        end
+        self:generateNow()
     end
 end
 
@@ -272,6 +251,11 @@ function ConfigUI:generate()
     if self.generateCallback then
         self.generatePending = true
     end
+end
+
+function ConfigUI:generateNow()
+    self.generateCallback(self.config)
+    -- sim.announceSceneContentChange() leave this out for now
 end
 
 function ConfigUI:__index(k)
@@ -301,6 +285,7 @@ setmetatable(ConfigUI, {__call = function(meta, modelType, schema, genCb)
     sim.registerScriptFuncHook('sysCall_init', function() self:sysCall_init() end)
     sim.registerScriptFuncHook('sysCall_cleanup', function() self:sysCall_cleanup() end)
     sim.registerScriptFuncHook('sysCall_userConfig', function() self:sysCall_userConfig() end)
+    sim.registerScriptFuncHook('sysCall_data', function(...) self:sysCall_data(...) end)
     sim.registerScriptFuncHook('sysCall_nonSimulation', function() self:sysCall_nonSimulation() end)
     sim.registerScriptFuncHook('sysCall_beforeSimulation', function() self:sysCall_beforeSimulation() end)
     sim.registerScriptFuncHook('sysCall_sensing', function() self:sysCall_sensing() end)
