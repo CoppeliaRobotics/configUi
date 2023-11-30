@@ -11,5 +11,5 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${COPPELIASIM_INCLUDE_DIR}/cmake)
 find_package(CoppeliaSim 4.5.1.7 REQUIRED)
 
-coppeliasim_add_lua("configUi-2.lua")
+coppeliasim_add_lua("lua/configUi-2.lua")
 coppeliasim_add_resource_directory(qml)
