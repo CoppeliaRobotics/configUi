@@ -142,6 +142,14 @@ function ConfigUI:writeConfig()
     sim.writeCustomTableData(self:getObject(), self.dataBlockName.config, self.config)
 end
 
+function ConfigUI:readUiState()
+    return sim.readCustomTableData(self:getObject(), self.dataBlockName.uiState .. '@tmp')
+end
+
+function ConfigUI:writeUiState(uiState)
+    sim.writeCustomTableData(self:getObject(), self.dataBlockName.uiState .. '@tmp', uiState)
+end
+
 function ConfigUI:showUi()
     if not self.uiHandle then
         self:readConfig()
@@ -160,6 +168,9 @@ function ConfigUI:createUi()
         schema = self.schema,
         objectName = sim.getObjectAlias(self:getObject(), 1),
     })
+    local uiState = self:readUiState()
+    uiState.opened = true
+    self:writeUiState(uiState)
 end
 
 function ConfigUI_uiChanged(c)
@@ -192,6 +203,9 @@ function ConfigUI:uiClosing(info)
     if self.uiHandle then
         simQML.destroyEngine(self.uiHandle)
         self.uiHandle = nil
+        local uiState = self:readUiState()
+        uiState.opened = false
+        self:writeUiState(uiState)
     end
 end
 
@@ -203,6 +217,11 @@ function ConfigUI:sysCall_init()
     self:writeInfo()
     self:readConfig() -- reads existing or creates default
     self:writeConfig()
+
+    local uiState = self:readUiState()
+    if uiState.opened then
+        self:showUi()
+    end
 end
 
 function ConfigUI:sysCall_cleanup()
@@ -282,6 +301,7 @@ setmetatable(ConfigUI, {__call = function(meta, modelType, schema, genCb)
             config = '__config__',
             info = '__info__',
             schema = '__schema__',
+            uiState = '__uiState__',
         },
         modelType = modelType,
         schema = schema,
