@@ -88,6 +88,7 @@ Rectangle {
     }
 
     property string selectedTab: "Main"
+    onSelectedTabChanged: tabBar.currentIndex = tabs().indexOf(root.selectedTab)
 
     ColumnLayout {
         id: topLayout

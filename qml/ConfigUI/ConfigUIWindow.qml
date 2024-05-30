@@ -28,11 +28,15 @@ PluginWindow {
         colorGroup: SystemPalette.Active
     }
 
-    onClosing: simBridge.sendEvent('ConfigUI_uiClosing',{})
+    onClosing: sendUiState(true)
+
+    readonly property point position: Qt.point(x, y)
+    onPositionChanged: sendUiState()
 
     ConfigUI {
         id: configUi
         simBridge: mainWindow.simBridge
+        onSelectedTabChanged: sendUiState()
     }
 
     // called from lua:
@@ -53,5 +57,20 @@ PluginWindow {
 
     function beforeSimulation() {
         close()
+    }
+
+    function sendUiState(closing) {
+        simBridge.sendEvent('ConfigUI_uiState', {opened: !closing, x: mainWindow.x, y: mainWindow.y, tab: configUi.selectedTab})
+    }
+
+    function setUiState(uiState) {
+        if(uiState.x && uiState.y) {
+            mainWindow.readjustPosition = false
+            mainWindow.x = uiState.x
+            mainWindow.y = uiState.y
+        }
+        if(uiState.tab) {
+            configUi.selectedTab = uiState.tab
+        }
     }
 }

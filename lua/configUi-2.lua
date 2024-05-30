@@ -168,9 +168,7 @@ function ConfigUI:createUi()
         schema = self.schema,
         objectName = sim.getObjectAlias(self:getObject(), 1),
     })
-    local uiState = self:readUiState()
-    uiState.opened = true
-    self:writeUiState(uiState)
+    simQML.sendEvent(self.uiHandle, 'setUiState', self:readUiState())
 end
 
 function ConfigUI_uiChanged(c)
@@ -179,9 +177,9 @@ function ConfigUI_uiChanged(c)
     end
 end
 
-function ConfigUI_uiClosing(info)
+function ConfigUI_uiState(info)
     if ConfigUI.instance then
-        ConfigUI.instance:uiClosing(info)
+        ConfigUI.instance:uiState(info)
     end
 end
 
@@ -199,13 +197,13 @@ function ConfigUI:uiChanged(c)
     self:writeConfig()
 end
 
-function ConfigUI:uiClosing(info)
-    if self.uiHandle then
+function ConfigUI:uiState(uiState)
+    self:writeUiState(uiState)
+
+    if self.uiHandle and not uiState.opened then
+        -- UI is closing
         simQML.destroyEngine(self.uiHandle)
         self.uiHandle = nil
-        local uiState = self:readUiState()
-        uiState.opened = false
-        self:writeUiState(uiState)
     end
 end
 
