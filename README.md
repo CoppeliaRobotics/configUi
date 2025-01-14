@@ -1,4 +1,4 @@
-# ConfigUI 2
+# ConfigUI 3
 
 A library for CoppeliaSim models' configuration.
 
@@ -8,8 +8,8 @@ A library for CoppeliaSim models' configuration.
 2. Checkout, compile and install into CoppeliaSim:
 ```sh
 $ cd path/to/CoppeliaSim/programming
-$ git clone https://github.com/CoppeliaRobotics/configUi-2.git
-$ cd configUi-2
+$ git clone https://github.com/CoppeliaRobotics/configUi.git
+$ cd configUi
 $ git checkout coppeliasim-v4.5.0-rev0
 $ mkdir -p build && cd build
 $ cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -69,20 +69,20 @@ The valid fields of an element schema are:
 Here's a complete example:
 
 ```lua
-require'configUi-2'
+require 'configUi-3'
 
-schema={
-    a={
-        type='int',
-        name='A',
-        minimum=0,
-        maximum=10,
-        ui={order=1,control='spinbox',},
+schema = {
+    a = {
+        type = 'int',
+        name = 'A',
+        minimum = 0,
+        maximum = 10,
+        ui = {order = 1, control = 'spinbox', },
     },
-    b={
-        type='string',
-        name='B',
-        ui={order=2,},
+    b = {
+        type = 'string',
+        name = 'B',
+        ui = {order = 2, },
     }
 }
 
@@ -91,5 +91,11 @@ function gen(cfg)
     print(cfg)
 end
 
-configUi=ConfigUI('myModelType',schema,gen)
+configUi = ConfigUI('myModelType', schema, gen)
 ```
+
+### Changelog
+
+1) initial version
+2) switch to QML-based UI
+3) switch to using properties instead of custom data blocks

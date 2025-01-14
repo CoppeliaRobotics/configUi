@@ -99,27 +99,13 @@ function ConfigUI:getObjectName()
     return sim.getObjectAlias(self:getObject(), 1)
 end
 
-function ConfigUI:readInfo()
-    self.info = {}
-    local info = sim.readCustomTableData(self:getObject(), self.dataBlockName.info)
-    for k, v in pairs(info) do
-        self.info[k] = v
-    end
-end
-
-function ConfigUI:writeInfo()
-    sim.writeCustomTableData(self:getObject(), self.dataBlockName.info, self.info)
-end
-
 function ConfigUI:readSchema()
-    local schema = sim.readCustomTableData(self:getObject(), self.dataBlockName.schema)
+    local schema = sim.getTableProperty(self:getObject(), 'customData.' .. self.propertyName.schema, {noError=true}) or {}
     if next(schema) ~= nil then
         self.schema = {}
-        for k, v in pairs(schema) do
-            self.schema[k] = v
-        end
+        for k, v in pairs(schema) do self.schema[k] = v end
     elseif self.schema == nil then
-        error('schema not provided, and not found in the custom data block ' .. self.dataBlockName.schema)
+        error('schema not provided, and not found in the custom data block ' ..  self.propertyName.schema)
     end
 end
 
@@ -129,25 +115,32 @@ function ConfigUI:defaultConfig()
     return ret
 end
 
-function ConfigUI:readConfig()
+function ConfigUI:getConfigProperty(k)
+    local nsConfig = self.propertyNamespace.config or ''
+    if nsConfig ~= '' then nsConfig = nsConfig .. '.' end
+    return 'customData.' .. nsConfig .. k
+end
+
+function ConfigUI:readConfigConst()
     if self.schema == nil then error('readConfig() requires schema') end
-    self.config = self:defaultConfig()
-    local config = sim.readCustomTableData(self:getObject(), self.dataBlockName.config)
-    for k, v in pairs(config) do
-        if self.schema[k] then self.config[k] = v end
+    local config = self:defaultConfig()
+    for k, v in pairs(self.schema) do
+        local pv = sim.getProperty(self:getObject(), self:getConfigProperty(k), {noError=true})
+        if pv ~= nil then config[k] = pv end
     end
+    return config
+end
+
+function ConfigUI:readConfig()
+    self.config = self:readConfigConst()
 end
 
 function ConfigUI:writeConfig()
-    sim.writeCustomTableData(self:getObject(), self.dataBlockName.config, self.config)
-end
-
-function ConfigUI:readUiState()
-    return sim.readCustomTableData(self:getObject(), self.dataBlockName.uiState .. '@tmp')
-end
-
-function ConfigUI:writeUiState(uiState)
-    sim.writeCustomTableData(self:getObject(), self.dataBlockName.uiState .. '@tmp', uiState)
+    for k, v in pairs(self.schema) do
+        if self.config[k] ~= nil then
+            sim.setProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
+        end
+    end
 end
 
 function ConfigUI:showUi()
@@ -168,7 +161,7 @@ function ConfigUI:createUi()
         schema = self.schema,
         objectName = sim.getObjectAlias(self:getObject(), 1),
     })
-    simQML.sendEvent(self.uiHandle, 'setUiState', self:readUiState())
+    simQML.sendEvent(self.uiHandle, 'setUiState', self.uiState)
 end
 
 function ConfigUI_uiChanged(c)
@@ -179,7 +172,7 @@ end
 
 function ConfigUI_uiState(info)
     if ConfigUI.instance then
-        ConfigUI.instance:uiState(info)
+        ConfigUI.instance:uiStateChanged(info)
     end
 end
 
@@ -197,8 +190,10 @@ function ConfigUI:uiChanged(c)
     self:writeConfig()
 end
 
-function ConfigUI:uiState(uiState)
-    self:writeUiState(uiState)
+function ConfigUI:uiStateChanged(uiState)
+    for k, v in pairs(uiState) do
+        self.uiState[k] = v
+    end
 
     if self.uiHandle and not uiState.opened then
         -- UI is closing
@@ -210,19 +205,26 @@ end
 function ConfigUI:sysCall_init()
     self:readSchema()
     self:validateSchema()
-    self:readInfo()
-    self.info.modelType = self.modelType
-    self:writeInfo()
     self:readConfig() -- reads existing or creates default
     self:writeConfig()
 
-    local uiState = self:readUiState()
-    if uiState.opened then
+    self.uiState = self.uiState or {}
+    local uiState = sim.getTableProperty(self:getObject(), 'signal.configUi.uistate', {noError=true})
+    if uiState then
+        sim.removeProperty(self:getObject(), 'signal.configUi.uistate')
+        for k, v in pairs(uiState) do
+            self.uiState[k] = v
+        end
+    end
+    if self.uiState.opened then
         self:showUi()
     end
 end
 
 function ConfigUI:sysCall_cleanup()
+    -- save uistate here so it can persist a script restart:
+    sim.setTableProperty(self:getObject(), 'signal.configUi.uistate', self.uiState)
+
     if self.uiHandle then
         simQML.destroyEngine(self.uiHandle)
         self.uiHandle = nil
@@ -236,12 +238,15 @@ function ConfigUI:sysCall_userConfig()
 end
 
 function ConfigUI:sysCall_data(changedNames)
-    if changedNames[self.dataBlockName.config] then
-        self:readConfig()
-        if self.uiHandle then
-            simQML.sendEvent(self.uiHandle, 'setConfig', self.config)
+    for changedName, g in pairs(changedNames) do
+        local typ, name = changedName:match("&(.-)&%.(.*)")
+        if self.schema[name] and g then
+            self:readConfig()
+            if self.uiHandle then
+                simQML.sendEvent(self.uiHandle, 'setConfig', self.config)
+            end
+            self:generateNow()
         end
-        self:generateNow()
     end
 end
 
@@ -295,11 +300,11 @@ setmetatable(ConfigUI, {__call = function(meta, modelType, schema, genCb)
         error('multiple instances of ConfigUI not supported')
     end
     local self = setmetatable({
-        dataBlockName = {
-            config = '__config__',
-            info = '__info__',
+        propertyNamespace = {
+            config = '',
+        },
+        propertyName = {
             schema = '__schema__',
-            uiState = '__uiState__',
         },
         modelType = modelType,
         schema = schema,
