@@ -89,7 +89,7 @@ function ConfigUI:getObject()
     if self.getObjectCallback then
         return self:getObjectCallback()
     end
-    return sim.getObject '.'
+    return self.targetObject or sim.getObject '.'
 end
 
 function ConfigUI:getObjectName()
@@ -290,7 +290,7 @@ function ConfigUI:__index(k)
     return ConfigUI[k]
 end
 
-setmetatable(ConfigUI, {__call = function(meta, modelType, schema, genCb)
+setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
     sim = require 'sim'
     simQML = require 'simQML'
     if table.compare(simQML.qtVersion(), {5, 15})<0 then
@@ -299,6 +299,12 @@ setmetatable(ConfigUI, {__call = function(meta, modelType, schema, genCb)
     if ConfigUI.instance then
         error('multiple instances of ConfigUI not supported')
     end
+    if type(targetObject) == 'string' then
+        targetObject = sim.getObject(targetObject)
+    end
+    if targetObject ~= nil then
+        assert(math.type(targetObject) == 'integer' and sim.isHandle(targetObject), 'first arg must be nil or the handle of the target object')
+    end
     local self = setmetatable({
         propertyNamespace = {
             config = '',
@@ -306,7 +312,7 @@ setmetatable(ConfigUI, {__call = function(meta, modelType, schema, genCb)
         propertyName = {
             schema = '__schema__',
         },
-        modelType = modelType,
+        targetObject = targetObject,
         schema = schema,
         generatePending = false,
     }, meta)
