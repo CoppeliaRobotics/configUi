@@ -246,7 +246,7 @@ end
 function ConfigUI:sysCall_data(changedNames, ns)
     for changedName, g in pairs(changedNames) do
         local typ, name = changedName:match("&(.-)&%.(.*)")
-        if string.startswith(name, self.propertyNamespace.config .. '.') then
+        if name and string.startswith(name, self.propertyNamespace.config .. '.') then
             name = name:sub(1 + #self.propertyNamespace.config + 1)
         end
         if ns == 'customData' and self.schema[name] and g then
