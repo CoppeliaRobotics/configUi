@@ -240,6 +240,9 @@ end
 function ConfigUI:sysCall_data(changedNames)
     for changedName, g in pairs(changedNames) do
         local typ, name = changedName:match("&(.-)&%.(.*)")
+        if string.startswith(name, self.propertyNamespace.config .. '.') then
+            name = name:sub(1 + #self.propertyNamespace.config + 1)
+        end
         if self.schema[name] and g then
             self:readConfig()
             if self.uiHandle then
