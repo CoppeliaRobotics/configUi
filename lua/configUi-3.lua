@@ -237,13 +237,13 @@ function ConfigUI:sysCall_userConfig()
     end
 end
 
-function ConfigUI:sysCall_data(changedNames)
+function ConfigUI:sysCall_data(changedNames, ns)
     for changedName, g in pairs(changedNames) do
         local typ, name = changedName:match("&(.-)&%.(.*)")
         if string.startswith(name, self.propertyNamespace.config .. '.') then
             name = name:sub(1 + #self.propertyNamespace.config + 1)
         end
-        if self.schema[name] and g then
+        if ns == 'customData' and self.schema[name] and g then
             self:readConfig()
             if self.uiHandle then
                 simQML.sendEvent(self.uiHandle, 'setConfig', self.config)
