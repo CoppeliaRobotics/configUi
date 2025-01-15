@@ -55,10 +55,6 @@ PluginWindow {
             mainWindow.title = `${o.objectName} config`
     }
 
-    function beforeSimulation() {
-        close()
-    }
-
     function sendUiState(closing) {
         simBridge.sendEvent('ConfigUI_uiState', {opened: !closing, x: mainWindow.x, y: mainWindow.y, tab: configUi.selectedTab})
     }

@@ -238,7 +238,7 @@ function ConfigUI:sysCall_cleanup()
 end
 
 function ConfigUI:sysCall_userConfig()
-    if sim.getSimulationState() == sim.simulation_stopped then
+    if self.allowDuringSimulation or sim.getSimulationState() == sim.simulation_stopped then
         self:showUi()
     end
 end
@@ -267,8 +267,15 @@ function ConfigUI:sysCall_nonSimulation()
 end
 
 function ConfigUI:sysCall_beforeSimulation()
-    if not self.uiHandle then return end
-    simQML.sendEvent(self.uiHandle, 'beforeSimulation', self.config)
+    if self.uiHandle then
+        if self.allowDuringSimulation then
+            simQML.sendEvent(self.uiHandle, 'beforeSimulation', self.config)
+        else
+            self.reopenAfterSimulation = true
+            simQML.destroyEngine(self.uiHandle)
+            self.uiHandle = nil
+        end
+    end
 end
 
 function ConfigUI:sysCall_sensing()
@@ -276,8 +283,14 @@ function ConfigUI:sysCall_sensing()
 end
 
 function ConfigUI:sysCall_afterSimulation()
-    if not self.uiHandle then return end
-    simQML.sendEvent(self.uiHandle, 'afterSimulation', self.config)
+    if self.reopenAfterSimulation then
+        self.reopenAfterSimulation = nil
+        self:showUi()
+    end
+
+    if self.uiHandle then
+        simQML.sendEvent(self.uiHandle, 'afterSimulation', self.config)
+    end
 end
 
 function ConfigUI:setGenerateCallback(f)
