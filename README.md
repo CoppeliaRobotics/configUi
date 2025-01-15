@@ -32,10 +32,10 @@ Schema is a table of element schemas, in the form:
 
 ```
 {
-    elementName1={
+    elementName1 = {
         ...
     },
-    elementName2={
+    elementName2 = {
         ...
     },
     ...
@@ -91,11 +91,11 @@ function gen(cfg)
     print(cfg)
 end
 
-configUi = ConfigUI('myModelType', schema, gen)
+configUi = ConfigUI(sim.getObject '.', schema, gen)
 ```
 
 ### Changelog
 
 1) initial version
 2) switch to QML-based UI
-3) switch to using properties instead of custom data blocks
+3) switch to using properties instead of custom data blocks; first arg is target object handle
