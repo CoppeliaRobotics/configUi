@@ -302,7 +302,7 @@ end
 setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
     sim = require 'sim'
     simQML = require 'simQML'
-    if table.compare(simQML.qtVersion(), {5, 15})<0 then
+    if table.compare(simQML.qtVersion(), {5, 15}) < 0 then
         error('Qt version 5.15 or greater is required (have ' .. table.join(simQML.qtVersion(), '.') .. ')')
     end
     if ConfigUI.instance then
@@ -324,16 +324,17 @@ setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
         targetObject = targetObject,
         schema = schema,
         generatePending = false,
+        allowDuringSimulation = false,
     }, meta)
     self:setGenerateCallback(genCb)
     sim.registerScriptFuncHook('sysCall_init', function() self:sysCall_init() end)
     sim.registerScriptFuncHook('sysCall_cleanup', function() self:sysCall_cleanup() end)
-    sim.registerScriptFuncHook('sysCall_userConfig', function() self:sysCall_userConfig() end)
+    sim.registerScriptFuncHook('sysCall_userConfig', function() self:sysCall_userConfig() end, true)
     sim.registerScriptFuncHook('sysCall_data', function(...) self:sysCall_data(...) end)
     sim.registerScriptFuncHook('sysCall_nonSimulation', function() self:sysCall_nonSimulation() end)
-    sim.registerScriptFuncHook('sysCall_beforeSimulation', function() self:sysCall_beforeSimulation() end)
+    sim.registerScriptFuncHook('sysCall_beforeSimulation', function() self:sysCall_beforeSimulation() end, true)
     sim.registerScriptFuncHook('sysCall_sensing', function() self:sysCall_sensing() end)
-    sim.registerScriptFuncHook('sysCall_afterSimulation', function() self:sysCall_afterSimulation() end)
+    sim.registerScriptFuncHook('sysCall_afterSimulation', function() self:sysCall_afterSimulation() end, true)
     ConfigUI.instance = self
     return self
 end})
