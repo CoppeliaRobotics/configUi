@@ -312,6 +312,9 @@ end
 
 setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
     sim = require 'sim'
+    if sim.getProperty(sim.handle_app, 'productVersionNb') < 4090001 then
+        error('CoppeliaSim V4.9.0 rev1 or later is required')
+    end
     simQML = require 'simQML'
     if table.compare(simQML.qtVersion(), {5, 15}) < 0 then
         error('Qt version 5.15 or greater is required (have ' .. table.join(simQML.qtVersion(), '.') .. ')')
