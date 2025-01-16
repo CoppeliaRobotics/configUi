@@ -265,11 +265,18 @@ function ConfigUI:sysCall_data(changedNames, ns)
             assert(string.startswith(name, self.propertyNamespace.config .. '.'))
             name = name:sub(1 + #self.propertyNamespace.config + 1)
         end
-        if ns == 'customData' and self.schema[name] and g then
+        if ns == 'customData' and self.schema[name] then
             if self.uiHandle then
                 simQML.sendEvent(self.uiHandle, 'setConfig', {name, self:readProperty(name)})
             end
             self:generateIfNeeded()
+        end
+
+        if type(self.itemChangedCallback) == 'function' then
+            self.itemChangedCallback(name, self:readProperty(name))
+        end
+        if type(self.configChangedCallback) == 'function' then
+            self.configChangedCallback(self:readConfigConst())
         end
     end
 end
