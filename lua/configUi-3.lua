@@ -138,10 +138,12 @@ end
 function ConfigUI:writeConfig()
     for k, v in pairs(self.schema) do
         if self.config[k] ~= nil then
-            -- because of the JSON serialization between CoppeliaSim and QML,
-            -- 0.0 becomes 0; so use explicit float setter:
-            if self.schema[k] and self.schema[k].type == 'float' then
+            if v.type == 'float' then
+                -- because of the JSON serialization between CoppeliaSim and QML,
+                -- 0.0 becomes 0; so use explicit float setter:
                 sim.setFloatProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
+            elseif v.type == 'color' then
+                sim.setColorProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
             else
                 sim.setProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
             end
