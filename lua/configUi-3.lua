@@ -198,13 +198,7 @@ function ConfigUI:uiElemChanged(k, v)
         v = math.floor(v)
     end
     self:writeProperty(k, v)
-
-    if type(self.itemChangedCallback) == 'function' then
-        self.itemChangedCallback(k, v)
-    end
-    if type(self.configChangedCallback) == 'function' then
-        self.configChangedCallback(self:readConfigConst())
-    end
+    self:itemChanged(k, v)
 end
 
 function ConfigUI:uiStateChanged(uiState)
@@ -216,6 +210,19 @@ function ConfigUI:uiStateChanged(uiState)
         -- UI is closing
         simQML.destroyEngine(self.uiHandle)
         self.uiHandle = nil
+    end
+end
+
+function ConfigUI:itemChanged(k, v)
+    if type(self.itemChangedCallback) == 'function' then
+        self.itemChangedCallback(k, v)
+    end
+    self:configChanged()
+end
+
+function ConfigUI:configChanged()
+    if type(self.configChangedCallback) == 'function' then
+        self.configChangedCallback(self:readConfigConst())
     end
 end
 
@@ -270,13 +277,7 @@ function ConfigUI:sysCall_data(changedNames, ns)
                 simQML.sendEvent(self.uiHandle, 'setConfig', {name, self:readProperty(name)})
             end
             self:generateIfNeeded()
-        end
-
-        if type(self.itemChangedCallback) == 'function' then
-            self.itemChangedCallback(name, self:readProperty(name))
-        end
-        if type(self.configChangedCallback) == 'function' then
-            self.configChangedCallback(self:readConfigConst())
+            self:itemChanged(name, self:readProperty(name))
         end
     end
 end
