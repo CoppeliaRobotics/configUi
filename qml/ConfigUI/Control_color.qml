@@ -9,12 +9,13 @@ RowLayout {
     required property var elemSchema
     property var elemValue
 
+    onElemValueChanged: rectColor.color = Qt.rgba(elemValue[0], elemValue[1], elemValue[2], 1)
+
     Rectangle {
         id: rectColor
         width: button.height
         height: width
         border.color: 'black'
-        color: Qt.rgba(root.elemValue[0], root.elemValue[1], root.elemValue[2], 1)
     }
 
     Button {
@@ -25,9 +26,8 @@ RowLayout {
 
     ColorDialog {
         id: colorDialog
-        currentColor: rectColor.color
+        color: rectColor.color
         onAccepted: {
-            rectColor.color = currentColor
             elemValue = [currentColor.r, currentColor.g, currentColor.b]
         }
     }
