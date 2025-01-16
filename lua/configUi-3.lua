@@ -75,6 +75,7 @@ function ConfigUI:validateElemSchema(elemName, elemSchema)
 end
 
 function ConfigUI:validateSchema()
+    assert(self.schema ~= nil, 'missing schema')
     for elemName, elemSchema in pairs(self.schema) do
         local success, errorMessage = pcall(function()
             self:validateElemSchema(elemName, elemSchema)
@@ -109,51 +110,56 @@ function ConfigUI:readSchema()
     end
 end
 
-function ConfigUI:defaultConfig()
-    local ret = {}
-    for k, v in pairs(self.schema) do ret[k] = v.default end
-    return ret
-end
-
 function ConfigUI:getConfigProperty(k)
     local nsConfig = self.propertyNamespace.config or ''
     if nsConfig ~= '' then nsConfig = nsConfig .. '.' end
     return 'customData.' .. nsConfig .. k
 end
 
-function ConfigUI:readConfigConst()
-    if self.schema == nil then error('readConfig() requires schema') end
-    local config = self:defaultConfig()
+function ConfigUI:writeMissingConfigEntries()
+    assert(self.schema ~= nil, 'missing schema')
     for k, v in pairs(self.schema) do
-        local pv = sim.getProperty(self:getObject(), self:getConfigProperty(k), {noError=true})
-        if pv ~= nil then config[k] = pv end
+        if sim.getPropertyInfo(self:getObject(), self:getConfigProperty(k)) == nil then
+            self:writeProperty(k, self:readProperty(k))
+        end
+    end
+end
+
+function ConfigUI:readConfigConst()
+    assert(self.schema ~= nil, 'missing schema')
+    local config = {}
+    for k, v in pairs(self.schema) do
+        config[k] = self:readProperty(k)
     end
     return config
 end
 
-function ConfigUI:readConfig()
-    self.config = self:readConfigConst()
+function ConfigUI:readProperty(k)
+    assert(self.schema ~= nil, 'missing schema')
+    local elemSchema = self.schema[k]
+    if not elemSchema then return end
+    local val = sim.getProperty(self:getObject(), self:getConfigProperty(k), {noError = true})
+    if val == nil then val = elemSchema.default end
+    return val
 end
 
-function ConfigUI:writeConfig()
-    for k, v in pairs(self.schema) do
-        if self.config[k] ~= nil then
-            if v.type == 'float' then
-                -- because of the JSON serialization between CoppeliaSim and QML,
-                -- 0.0 becomes 0; so use explicit float setter:
-                sim.setFloatProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
-            elseif v.type == 'color' then
-                sim.setColorProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
-            else
-                sim.setProperty(self:getObject(), self:getConfigProperty(k), self.config[k])
-            end
-        end
+function ConfigUI:writeProperty(k, v)
+    assert(self.schema ~= nil, 'missing schema')
+    local elemSchema = self.schema[k]
+    if not elemSchema then return end
+    if elemSchema.type == 'float' then
+        -- because of the JSON serialization between CoppeliaSim and QML,
+        -- 0.0 becomes 0; so use explicit float setter:
+        sim.setFloatProperty(self:getObject(), self:getConfigProperty(k), v)
+    elseif elemSchema.type == 'color' then
+        sim.setColorProperty(self:getObject(), self:getConfigProperty(k), v)
+    else
+        sim.setProperty(self:getObject(), self:getConfigProperty(k), v)
     end
 end
 
 function ConfigUI:showUi()
     if not self.uiHandle then
-        self:readConfig()
         self:createUi()
     end
 end
@@ -165,16 +171,16 @@ function ConfigUI:createUi()
     local qmlFile = sim.getStringParam(sim.stringparam_resourcesdir) .. '/qml/ConfigUI/ConfigUIWindow.qml'
     simQML.load(self.uiHandle, qmlFile)
     simQML.sendEvent(self.uiHandle, 'setConfigAndSchema', {
-        config = self.config,
+        config = self:readConfigConst(),
         schema = self.schema,
         objectName = sim.getObjectAlias(self:getObject(), 1),
     })
     simQML.sendEvent(self.uiHandle, 'setUiState', self.uiState)
 end
 
-function ConfigUI_uiChanged(c)
+function ConfigUI_uiElemChanged(kv)
     if ConfigUI.instance then
-        ConfigUI.instance:uiChanged(c)
+        ConfigUI.instance:uiElemChanged(table.unpack(kv))
     end
 end
 
@@ -184,18 +190,21 @@ function ConfigUI_uiState(info)
     end
 end
 
-function ConfigUI:uiChanged(c)
-    for elemName, elemSchema in pairs(self.schema) do
-        local v = c[elemName]
-        if v ~= nil and elemSchema.type == 'int' then
-            v = math.floor(v)
-        end
-        if v ~= nil then
-            self.config[elemName] = v
-        end
+function ConfigUI:uiElemChanged(k, v)
+    local elemSchema = self.schema[k]
+    if not elemSchema then return end
+    if v == nil then return end
+    if elemSchema.type == 'int' then
+        v = math.floor(v)
     end
+    self:writeProperty(k, v)
 
-    self:writeConfig()
+    if type(self.itemChangedCallback) == 'function' then
+        self.itemChangedCallback(k, v)
+    end
+    if type(self.configChangedCallback) == 'function' then
+        self.configChangedCallback(self:readConfigConst())
+    end
 end
 
 function ConfigUI:uiStateChanged(uiState)
@@ -213,8 +222,7 @@ end
 function ConfigUI:sysCall_init()
     self:readSchema()
     self:validateSchema()
-    self:readConfig() -- reads existing or creates default
-    self:writeConfig()
+    self:writeMissingConfigEntries()
 
     self.uiState = self.uiState or {}
     local uiState = sim.getTableProperty(self:getObject(), 'customData.configUi.uistate', {noError=true})
@@ -247,31 +255,33 @@ end
 
 function ConfigUI:sysCall_data(changedNames, ns)
     for changedName, g in pairs(changedNames) do
-        local typ, name = changedName:match("&(.-)&%.(.*)")
-        if name and string.startswith(name, self.propertyNamespace.config .. '.') then
+        local typ, name
+        if changedName:startswith '&' then
+            typ, name = changedName:match("&(.-)&%.(.*)")
+        else
+            typ, name = nil, changedName
+        end
+        if self.propertyNamespace.config ~= '' and name then
+            assert(string.startswith(name, self.propertyNamespace.config .. '.'))
             name = name:sub(1 + #self.propertyNamespace.config + 1)
         end
         if ns == 'customData' and self.schema[name] and g then
-            self:readConfig()
             if self.uiHandle then
-                simQML.sendEvent(self.uiHandle, 'setConfig', self.config)
+                simQML.sendEvent(self.uiHandle, 'setConfig', {name, self:readProperty(name)})
             end
-            self:generateNow()
+            self:generateIfNeeded()
         end
     end
 end
 
 function ConfigUI:sysCall_nonSimulation()
-    if self.generatePending then --and (self.generatePending + self.generationTime)<sim.getSystemTime() then
-        self.generatePending = false
-        self:generateNow()
-    end
+    self:generateIfNeeded()
 end
 
 function ConfigUI:sysCall_beforeSimulation()
     if self.uiHandle then
         if self.allowDuringSimulation then
-            simQML.sendEvent(self.uiHandle, 'beforeSimulation', self.config)
+            simQML.sendEvent(self.uiHandle, 'beforeSimulation', self:readConfigConst())
         else
             self.reopenAfterSimulation = true
             simQML.destroyEngine(self.uiHandle)
@@ -291,28 +301,31 @@ function ConfigUI:sysCall_afterSimulation()
     end
 
     if self.uiHandle then
-        simQML.sendEvent(self.uiHandle, 'afterSimulation', self.config)
+        simQML.sendEvent(self.uiHandle, 'afterSimulation', self:readConfigConst())
     end
 end
 
-function ConfigUI:generate()
+function ConfigUI:generateLater()
     if self.generateCallback then
         self.generatePending = true
     end
 end
 
-function ConfigUI:generateNow()
+function ConfigUI:generateIfNeeded()
     if self.generateCallback then
-        self.generateCallback(self.config)
+        if self.generatePending then --and (self.generatePending + self.generationTime)<sim.getSystemTime() then
+            self.generatePending = false
+            self.generateCallback(self:readConfigConst())
+            -- sim.announceSceneContentChange() leave this out for now
+        end
     end
-    -- sim.announceSceneContentChange() leave this out for now
 end
 
 function ConfigUI:__index(k)
     return ConfigUI[k]
 end
 
-setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
+setmetatable(ConfigUI, {__call = function(meta, schema)
     sim = require 'sim'
     if sim.getProperty(sim.handle_app, 'productVersionNb') < 4090001 then
         error('CoppeliaSim V4.9.0 rev1 or later is required')
@@ -324,12 +337,6 @@ setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
     if ConfigUI.instance then
         error('multiple instances of ConfigUI not supported')
     end
-    if type(targetObject) == 'string' then
-        targetObject = sim.getObject(targetObject)
-    end
-    if targetObject ~= nil then
-        assert(math.type(targetObject) == 'integer' and sim.isHandle(targetObject), 'first arg must be nil or the handle of the target object')
-    end
     local self = setmetatable({
         propertyNamespace = {
             config = '',
@@ -337,9 +344,8 @@ setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
         propertyName = {
             schema = '__schema__',
         },
-        targetObject = targetObject,
+        targetObject = sim.getObject '.',
         schema = schema,
-        generateCallback = genCb,
         generatePending = false,
         allowDuringSimulation = false,
     }, meta)

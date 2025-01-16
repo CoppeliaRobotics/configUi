@@ -71,7 +71,7 @@ Here's a complete example:
 ```lua
 require 'configUi-3'
 
-schema = {
+configUi = ConfigUI {
     a = {
         type = 'int',
         name = 'A',
@@ -86,16 +86,14 @@ schema = {
     }
 }
 
-function gen(cfg)
+configUi.generateCallback = function(cfg)
     print('Config has changed:')
     print(cfg)
 end
-
-configUi = ConfigUI(sim.getObject '.', schema, gen)
 ```
 
 ### Changelog
 
 1) initial version
 2) switch to QML-based UI
-3) switch to using properties instead of custom data blocks; first arg is target object handle
+3) switch to using properties instead of custom data blocks; single constructor arg is schema

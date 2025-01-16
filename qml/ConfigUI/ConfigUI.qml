@@ -30,11 +30,12 @@ Rectangle {
         return ss
     }
 
-    signal updateConfig(newConfig: var)
+    signal updateConfig(changedKey: string, value: var)
 
-    function setConfig(c) {
-        config = c
-        updateConfig(c)
+    function setConfig(kv) {
+        const [k, v] = kv;
+        config[k] = v
+        updateConfig(k, v)
     }
 
     function setSchema(s) {
@@ -43,7 +44,8 @@ Rectangle {
     }
 
     function setConfigAndSchema(o) {
-        setConfig(o.config)
+        for(var k of Object.keys(o.config))
+            setConfig([k, o.config[k]])
         setSchema(o.schema)
     }
 
@@ -168,18 +170,17 @@ Rectangle {
                                             target: loader.item
                                             function onElemValueChanged() {
                                                 root.config[loader.item.elemName] = loader.item.elemValue
-                                                simBridge.sendEvent('ConfigUI_uiChanged',root.config)
+                                                simBridge.sendEvent('ConfigUI_uiElemChanged', [loader.item.elemName, loader.item.elemValue])
                                             }
                                         }
 
                                         Connections {
                                             id: updateConfigConnection
                                             target: root
-                                            function onUpdateConfig(c) {
+                                            function onUpdateConfig(k, v) {
+                                                if(k !== loader.item.elemName) return
                                                 uiChangedConnection.enabled = false
-                                                var v = c[loader.item.elemName]
                                                 loader.item.elemValue = v
-                                                root.config[loader.item.elemName] = v
                                                 uiChangedConnection.enabled = true
                                             }
                                         }
