@@ -293,10 +293,6 @@ function ConfigUI:sysCall_afterSimulation()
     end
 end
 
-function ConfigUI:setGenerateCallback(f)
-    self.generateCallback = f
-end
-
 function ConfigUI:generate()
     if self.generateCallback then
         self.generatePending = true
@@ -304,7 +300,9 @@ function ConfigUI:generate()
 end
 
 function ConfigUI:generateNow()
-    self.generateCallback(self.config)
+    if self.generateCallback then
+        self.generateCallback(self.config)
+    end
     -- sim.announceSceneContentChange() leave this out for now
 end
 
@@ -336,10 +334,10 @@ setmetatable(ConfigUI, {__call = function(meta, targetObject, schema, genCb)
         },
         targetObject = targetObject,
         schema = schema,
+        generateCallback = genCb,
         generatePending = false,
         allowDuringSimulation = false,
     }, meta)
-    self:setGenerateCallback(genCb)
     sim.registerScriptFuncHook('sysCall_init', function() self:sysCall_init() end)
     sim.registerScriptFuncHook('sysCall_cleanup', function() self:sysCall_cleanup() end)
     sim.registerScriptFuncHook('sysCall_userConfig', function() self:sysCall_userConfig() end, true)
