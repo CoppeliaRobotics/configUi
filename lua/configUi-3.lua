@@ -217,9 +217,9 @@ function ConfigUI:sysCall_init()
     self:writeConfig()
 
     self.uiState = self.uiState or {}
-    local uiState = sim.getTableProperty(self:getObject(), 'signal.configUi.uistate', {noError=true})
+    local uiState = sim.getTableProperty(self:getObject(), 'customData.configUi.uistate', {noError=true})
     if uiState then
-        sim.removeProperty(self:getObject(), 'signal.configUi.uistate')
+        sim.removeProperty(self:getObject(), 'customData.configUi.uistate')
         for k, v in pairs(uiState) do
             self.uiState[k] = v
         end
@@ -231,7 +231,7 @@ end
 
 function ConfigUI:sysCall_cleanup()
     -- save uistate here so it can persist a script restart:
-    sim.setTableProperty(self:getObject(), 'signal.configUi.uistate', self.uiState)
+    sim.setTableProperty(self:getObject(), 'customData.configUi.uistate', self.uiState)
 
     if self.uiHandle then
         simQML.destroyEngine(self.uiHandle)
