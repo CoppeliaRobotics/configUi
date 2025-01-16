@@ -299,7 +299,7 @@ function ConfigUI:sysCall_beforeSimulation()
 end
 
 function ConfigUI:sysCall_sensing()
-    self:sysCall_nonSimulation()
+    self:generateIfNeeded()
 end
 
 function ConfigUI:sysCall_afterSimulation()
