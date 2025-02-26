@@ -9,7 +9,6 @@ PluginWindow {
     id: mainWindow
     width: configUi.implicitWidth
     height: configUi.implicitHeight
-    visible: true
     title: qsTr("ConfigUI")
     color: systemPalette.window
     resizable: false
