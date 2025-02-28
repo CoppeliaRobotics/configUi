@@ -323,8 +323,13 @@ function ConfigUI:generateIfNeeded()
     if self.generateCallback then
         if self.generatePending then --and (self.generatePending + self.generationTime)<sim.getSystemTime() then
             self.generatePending = false
-            self.generateCallback(self:readConfigConst())
-            -- sim.announceSceneContentChange() leave this out for now
+            local cfg = self:readConfigConst()
+            local cfgPack = sim.packTable(cfg)
+            if cfgPack ~= self.generatedForConfig then
+                self.generateCallback(cfg)
+                self.generatedForConfig = cfgPack
+                -- sim.announceSceneContentChange() leave this out for now
+            end
         end
     end
 end
