@@ -158,12 +158,6 @@ function ConfigUI:writeProperty(k, v)
     end
 end
 
-function ConfigUI:showUi()
-    if not self.uiHandle then
-        self:createUi()
-    end
-end
-
 function ConfigUI:createUi()
     if self.uiHandle then return end
     self.uiHandle = simQML.createEngine()
@@ -176,6 +170,20 @@ function ConfigUI:createUi()
         objectName = sim.getObjectAlias(self:getObject(), 1),
     })
     simQML.sendEvent(self.uiHandle, 'setUiState', self.uiState)
+end
+
+function ConfigUI:destroyUi()
+    if not self.uiHandle then return end
+    simQML.destroyEngine(self.uiHandle)
+    self.uiHandle = nil
+end
+
+function ConfigUI:showUi()
+    self:createUi()
+end
+
+function ConfigUI:hideUi()
+    self:destroyUi()
 end
 
 function ConfigUI_uiElemChanged(kv)
@@ -208,8 +216,7 @@ function ConfigUI:uiStateChanged(uiState)
 
     if self.uiHandle and not uiState.opened then
         -- UI is closing
-        simQML.destroyEngine(self.uiHandle)
-        self.uiHandle = nil
+        self:destroyUi()
     end
 end
 
@@ -257,13 +264,11 @@ function ConfigUI:sysCall_cleanup()
     -- save uistate here so it can persist a script restart:
     sim.setTableProperty(self:getObject(), 'customData.configUi.uistate', self.uiState)
 
-    if self.uiHandle then
-        simQML.destroyEngine(self.uiHandle)
-        self.uiHandle = nil
-    end
+    self:destroyUi()
 end
 
 function ConfigUI:sysCall_userConfig()
+    if self.userConfig == false then return end
     if self.allowDuringSimulation or sim.getSimulationState() == sim.simulation_stopped then
         self:showUi()
     end
@@ -300,8 +305,7 @@ function ConfigUI:sysCall_beforeSimulation()
             simQML.sendEvent(self.uiHandle, 'beforeSimulation', self:readConfigConst())
         else
             self.reopenAfterSimulation = true
-            simQML.destroyEngine(self.uiHandle)
-            self.uiHandle = nil
+            self:hideUi()
         end
     end
 end
@@ -328,6 +332,15 @@ function ConfigUI:generateLater()
 end
 
 function ConfigUI:generateIfNeeded()
+    if self.userConfig == false and self.allowDuringSimulation then
+        local sel = sim.getObjectSel()
+        if #sel == 1 and sel[1] == self.targetObject then
+            self:showUi()
+        else
+            self:hideUi()
+        end
+    end
+
     if self.generateCallback then
         if self.generatePending then --and (self.generatePending + self.generationTime)<sim.getSystemTime() then
             self.generatePending = false
