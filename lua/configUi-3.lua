@@ -224,7 +224,15 @@ function ConfigUI:configChanged()
     if type(self.configChangedCallback) == 'function' then
         self.configChangedCallback(self:readConfigConst())
     end
-    self:generateLater()
+
+    -- call generate callback only if config actually changed, to save some CPU...
+    local cfg = self:readConfigConst()
+    local cfgPack = sim.packTable(cfg)
+    if cfgPack ~= self.generatedForConfig then
+        self:generateLater()
+        self.generatedForConfig = cfgPack
+        -- sim.announceSceneContentChange() leave this out for now
+    end
 end
 
 function ConfigUI:sysCall_init()
@@ -323,13 +331,8 @@ function ConfigUI:generateIfNeeded()
     if self.generateCallback then
         if self.generatePending then --and (self.generatePending + self.generationTime)<sim.getSystemTime() then
             self.generatePending = false
-            local cfg = self:readConfigConst()
-            local cfgPack = sim.packTable(cfg)
-            if cfgPack ~= self.generatedForConfig then
-                self.generateCallback(cfg)
-                self.generatedForConfig = cfgPack
-                -- sim.announceSceneContentChange() leave this out for now
-            end
+            self.generateCallback(self:readConfigConst())
+            -- sim.announceSceneContentChange() leave this out for now
         end
     end
 end
