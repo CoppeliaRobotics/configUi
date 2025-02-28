@@ -224,6 +224,7 @@ function ConfigUI:configChanged()
     if type(self.configChangedCallback) == 'function' then
         self.configChangedCallback(self:readConfigConst())
     end
+    self:generateLater()
 end
 
 function ConfigUI:sysCall_init()
@@ -276,7 +277,6 @@ function ConfigUI:sysCall_data(changedNames, ns)
             if self.uiHandle then
                 simQML.sendEvent(self.uiHandle, 'setConfig', {name, self:readProperty(name)})
             end
-            self:generateIfNeeded()
             self:itemChanged(name, self:readProperty(name))
         end
     end
